@@ -1,0 +1,3251 @@
+---
+title: "Engaging Gateshead with Zero Carbon Heat"
+format: html
+editor: visual
+---
+
+Load Packages
+
+```{r}
+library(tidyverse)
+library(here)
+library(patchwork)
+library(scales)
+library(ggthemes)
+library(afex)
+library(emmeans)
+```
+
+Fetch data
+
+```{r}
+data <- read_csv("data.csv")
+qual_data <- read_csv("qual_demographics.csv")
+```
+
+Resident status demographics
+
+```{r}
+data_status <- data |> select(id, resident_status) 
+
+resident_status_percentage <-data_status %>%
+  drop_na() %>%
+  count(resident_status) %>%
+  mutate(percent = n/sum(n)*100) %>%
+  mutate(
+    resident_status = case_when(
+      resident_status == 1 ~ "Owner Occupied",
+      resident_status == 2 ~ "Privately Rented",
+      resident_status == 3 ~ "Social Housing"))
+
+status_plot <- ggplot(resident_status_percentage, aes(x= 1, y=percent, fill=resident_status)) +
+  geom_col() +
+  coord_polar(theta = "y")+
+  xlim(c(0.2, 1.5))+
+  scale_fill_brewer()+
+  theme(legend.title=element_blank())+
+  theme(legend.text = element_text(size = 15)) +
+  geom_text(aes(label = round(percent, digits = 0)),
+             position = position_stack(vjust = 0.5), size = 10)+
+   theme(panel.background = element_rect(fill = "white"),
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank())
+
+status_plot
+
+```
+
+```{r}
+data_resident_length <- data |> select(id, time_in_current_home) 
+
+resident_length_percentage <-data_resident_length %>%
+  drop_na() %>%
+  count(time_in_current_home) %>%
+  mutate(percent = n/sum(n)*100) %>%
+  mutate(
+    time_in_current_home = case_when(
+      time_in_current_home == 1 ~ "Less than 1 year",
+      time_in_current_home == 2 ~ "Between 1-5 years",
+      time_in_current_home == 3 ~ "Between 6-10 years",
+      time_in_current_home == 4 ~ "More than 10 years"))
+
+resident_length_percentage$time_in_current_home <- factor(resident_length_percentage$time_in_current_home, levels = c("Less than 1 year", "Between 1-5 years", "Between 6-10 years", "More than 10 years"))
+
+length_plot <- ggplot(resident_length_percentage, aes(x= 1, y=percent, fill=time_in_current_home)) +
+  geom_col() +
+  coord_polar(theta = "y")+
+  xlim(c(0.2, 1.5))+
+  scale_fill_brewer()+
+  theme(legend.title=element_blank())+
+  theme(legend.text = element_text(size = 15)) +
+  geom_text(aes(label = round(percent, digits = 0)),
+             position = position_stack(vjust = 0.5), size = 10)+
+   theme(panel.background = element_rect(fill = "white"),
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank())
+
+length_plot
+```
+
+Combine plots
+
+```{r}
+status_plot+length_plot
+```
+
+Comparison of Old Fold/Nest and sample resident status
+
+```{r}
+comparison_data <- data.frame(
+  comparison = c("Old Fold/Nest", "sample", "Old Fold/Nest", "sample", "Old Fold/Nest", "sample"),
+  resident_status = c("Owner Occupied", "Owner Occupied", "Privately Rented", "Privately Rented", "Social Housing", "Social Housing"),
+  percentage = c(25, 48, 4, 11, 71, 41)
+  )
+
+comparison_plot <- ggplot(comparison_data, aes(x = resident_status, y = percentage, fill = comparison)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Resident Status", y = "Percentage") +
+  scale_fill_manual(values = c("Old Fold/Nest" = "#DEEBF7", "sample" = "#2171B5"))+
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 18)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title = element_blank())
+
+comparison_plot
+```
+
+Resident status demographics for Phase 2 (Qual)
+
+```{r}
+data_status_qual <- qual_data |> select(id, resident_status) 
+
+resident_status_percentage_qual <-data_status_qual %>%
+  drop_na() %>%
+  count(resident_status) %>%
+  mutate(percent = n/sum(n)*100) %>%
+  mutate(
+    resident_status = case_when(
+      resident_status == 1 ~ "Owner Occupied",
+      resident_status == 2 ~ "Privately Rented",
+      resident_status == 3 ~ "Social Housing",
+      resident_status == 4 ~ "Landlord"))
+
+qual_status_plot <- ggplot(resident_status_percentage_qual, aes(x= 1, y=percent, fill=resident_status)) +
+  geom_col() +
+  coord_polar(theta = "y")+
+  xlim(c(0.2, 1.5))+
+  scale_fill_brewer()+
+  theme(legend.title=element_blank())+
+  theme(legend.text = element_text(size = 15)) +
+  geom_text(aes(label = round(percent, digits = 0)),
+             position = position_stack(vjust = 0.5), size = 10)+
+   theme(panel.background = element_rect(fill = "white"),
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank())
+
+qual_status_plot
+```
+
+```{r}
+data_resident_length_qual <- qual_data |> select(id, time_in_current_home) 
+
+resident_length_percentage_qual <-data_resident_length_qual %>%
+  drop_na() %>%
+  count(time_in_current_home) %>%
+  mutate(percent = n/sum(n)*100) %>%
+  mutate(
+    time_in_current_home = case_when(
+      time_in_current_home == 1 ~ "Less than 1 year",
+      time_in_current_home == 2 ~ "Between 1-5 years",
+      time_in_current_home == 3 ~ "Between 6-10 years",
+      time_in_current_home == 4 ~ "More than 10 years"))
+
+resident_length_percentage_qual$time_in_current_home <- factor(resident_length_percentage_qual$time_in_current_home, levels = c("Less than 1 year", "Between 1-5 years", "Between 6-10 years", "More than 10 years"))
+
+qual_length_plot <- ggplot(resident_length_percentage_qual, aes(x= 1, y=percent, fill=time_in_current_home)) +
+  geom_col() +
+  coord_polar(theta = "y")+
+  xlim(c(0.2, 1.5))+
+  scale_fill_brewer()+
+  theme(legend.title=element_blank())+
+  theme(legend.text = element_text(size = 15)) +
+  geom_text(aes(label = round(percent, digits = 0)),
+             position = position_stack(vjust = 0.5), size = 10)+
+   theme(panel.background = element_rect(fill = "white"),
+        panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank())
+
+qual_length_plot
+```
+
+Combine plots
+
+```{r}
+qual_status_plot+qual_length_plot
+```
+
+Comparison of Old Fold/Nest and sample resident status (Phase 2 - Qual)
+
+```{r}
+comparison_data_qual <- data.frame(
+  comparison = c("Old Fold/Nest", "sample", "Old Fold/Nest", "sample", "Old Fold/Nest", "sample"),
+  resident_status = c("Owner Occupied", "Owner Occupied", "Privately Rented", "Privately Rented", "Social Housing", "Social Housing"),
+  percentage = c(25, 50, 4, 6, 71, 44)
+  )
+
+comparison_plot_qual <- ggplot(comparison_data_qual, aes(x = resident_status, y = percentage, fill = comparison)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Resident Status", y = "Percentage") +
+  scale_fill_manual(values = c("Old Fold/Nest" = "#DEEBF7", "sample" = "#2171B5"))+
+  theme_classic() +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.y = element_text(size = 18)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title = element_blank())
+
+comparison_plot_qual
+```
+
+Awareness and understanding
+
+```{r}
+data_awareness <- data |> select(id, awareness_1, awareness_2, awareness_3) |>
+
+  mutate(
+    awareness_1 = case_when(
+      awareness_1 == 1 ~ "Strongly Disagree",
+      awareness_1 == 2 ~ "Disagree",
+      awareness_1 == 3 ~ "Slightly Disagree",
+      awareness_1 == 4 ~ "Undecided",
+      awareness_1 == 5 ~ "Slightly Agree",
+      awareness_1 == 6 ~ "Agree",
+      awareness_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  awareness_2 = case_when(
+      awareness_2 == 1 ~ "Strongly Disagree",
+      awareness_2 == 2 ~ "Disagree",
+      awareness_2 == 3 ~ "Slightly Disagree",
+      awareness_2 == 4 ~ "Undecided",
+      awareness_2 == 5 ~ "Slightly Agree",
+      awareness_2 == 6 ~ "Agree",
+      awareness_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    awareness_3 = case_when(
+      awareness_3 == 1 ~ "Strongly Disagree",
+      awareness_3 == 2 ~ "Disagree",
+      awareness_3 == 3 ~ "Slightly Disagree",
+      awareness_3 == 4 ~ "Undecided",
+      awareness_3 == 5 ~ "Slightly Agree",
+      awareness_3 == 6 ~ "Agree",
+      awareness_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_awareness_long <- data_awareness |> 
+  pivot_longer(
+    cols = c(awareness_1, awareness_2, awareness_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_awareness_long_complete <- data_awareness_long %>% drop_na()
+
+data_awareness_long_complete$response <- factor(data_awareness_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_awareness_long_complete$question <- factor(data_awareness_long_complete$question, levels=c("awareness_3", "awareness_2", "awareness_1"))
+
+data_awareness_long_complete$question <- fct_recode(
+    data_awareness_long_complete$question, 
+    "I have heard about district heat networks before" = "awareness_1",
+    "I understand how district heat networks work" = "awareness_2",
+    "I could explain to another person what a district heat network is" = "awareness_3"
+)
+
+awareness_plot <- ggplot(data_awareness_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+awareness_plot
+  
+```
+
+Information and sources
+
+```{r}
+data_information <- data |> select(id, information_1, information_2, information_3, information_4, information_5) |>
+
+  mutate(
+    information_1 = case_when(
+      information_1 == 1 ~ "Strongly Disagree",
+      information_1 == 2 ~ "Disagree",
+      information_1 == 3 ~ "Slightly Disagree",
+      information_1 == 4 ~ "Undecided",
+      information_1 == 5 ~ "Slightly Agree",
+      information_1 == 6 ~ "Agree",
+      information_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  information_2 = case_when(
+      information_2 == 1 ~ "Strongly Disagree",
+      information_2 == 2 ~ "Disagree",
+      information_2 == 3 ~ "Slightly Disagree",
+      information_2 == 4 ~ "Undecided",
+      information_2 == 5 ~ "Slightly Agree",
+      information_2 == 6 ~ "Agree",
+      information_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    information_3 = case_when(
+      information_3 == 1 ~ "Strongly Disagree",
+      information_3 == 2 ~ "Disagree",
+      information_3 == 3 ~ "Slightly Disagree",
+      information_3 == 4 ~ "Undecided",
+      information_3 == 5 ~ "Slightly Agree",
+      information_3 == 6 ~ "Agree",
+      information_3 == 7 ~ "Strongly Agree")) |>
+
+  mutate(
+    information_4 = case_when(
+      information_4 == 1 ~ "Strongly Disagree",
+      information_4 == 2 ~ "Disagree",
+      information_4 == 3 ~ "Slightly Disagree",
+      information_4 == 4 ~ "Undecided",
+      information_4 == 5 ~ "Slightly Agree",
+      information_4 == 6 ~ "Agree",
+      information_4 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    information_5 = case_when(
+      information_5 == 1 ~ "Strongly Disagree",
+      information_5 == 2 ~ "Disagree",
+      information_5 == 3 ~ "Slightly Disagree",
+      information_5 == 4 ~ "Undecided",
+      information_5 == 5 ~ "Slightly Agree",
+      information_5 == 6 ~ "Agree",
+      information_5 == 7 ~ "Strongly Agree"))
+  
+
+data_information_long <- data_information |> 
+  pivot_longer(
+    cols = c(information_1, information_2, information_3, information_4, information_5),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_information_long_complete <- data_information_long %>% drop_na()
+
+data_information_long_complete$response <- factor(data_information_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_information_long_complete$question <- factor(data_information_long_complete$question, levels=c("information_5", "information_4", "information_3", "information_2", "information_1"))
+
+data_information_long_complete$question <- fct_recode(
+    data_information_long_complete$question, 
+    "I often seek information about district heat networks" = "information_1",
+    "I think more information could be provided about district heat networks" = "information_2",
+    "I would be interested in receiving relevant updates about district heat networks from Gateshead Energy Company" = "information_3" ,
+    "I have received information about district heat networks" = "information_4",
+    "I have read about district heat networks" = "information_5"
+)
+
+information_plot <- ggplot(data_information_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+information_plot
+
+
+```
+
+Perceived Benefits
+
+```{r}
+data_benefits <- data |> select(id, benefits_1, benefits_2, benefits_3, benefits_4) |>
+
+  mutate(
+    benefits_1 = case_when(
+      benefits_1 == 1 ~ "Strongly Disagree",
+      benefits_1 == 2 ~ "Disagree",
+      benefits_1 == 3 ~ "Slightly Disagree",
+      benefits_1 == 4 ~ "Undecided",
+      benefits_1 == 5 ~ "Slightly Agree",
+      benefits_1 == 6 ~ "Agree",
+      benefits_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  benefits_2 = case_when(
+      benefits_2 == 1 ~ "Strongly Disagree",
+      benefits_2 == 2 ~ "Disagree",
+      benefits_2 == 3 ~ "Slightly Disagree",
+      benefits_2 == 4 ~ "Undecided",
+      benefits_2 == 5 ~ "Slightly Agree",
+      benefits_2 == 6 ~ "Agree",
+      benefits_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    benefits_3 = case_when(
+      benefits_3 == 1 ~ "Strongly Disagree",
+      benefits_3 == 2 ~ "Disagree",
+      benefits_3 == 3 ~ "Slightly Disagree",
+      benefits_3 == 4 ~ "Undecided",
+      benefits_3 == 5 ~ "Slightly Agree",
+      benefits_3 == 6 ~ "Agree",
+      benefits_3 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    benefits_4 = case_when(
+      benefits_4 == 1 ~ "Strongly Disagree",
+      benefits_4 == 2 ~ "Disagree",
+      benefits_4 == 3 ~ "Slightly Disagree",
+      benefits_4 == 4 ~ "Undecided",
+      benefits_4 == 5 ~ "Slightly Agree",
+      benefits_4 == 6 ~ "Agree",
+      benefits_4 == 7 ~ "Strongly Agree"))
+  
+data_benefits_long <- data_benefits |> 
+  pivot_longer(
+    cols = c(benefits_1, benefits_2, benefits_3, benefits_4),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_benefits_long_complete <- data_benefits_long %>% drop_na()
+
+data_benefits_long_complete$response <- factor(data_benefits_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_benefits_long_complete$question <- factor(data_benefits_long_complete$question, levels=c("benefits_4", "benefits_3", "benefits_2", "benefits_1"))
+
+data_benefits_long_complete$question <- fct_recode(
+    data_benefits_long_complete$question, 
+    "My community has experienced positive changes due to zero carbon solutions, for example solar energy, district heat, and wind" = "benefits_1",
+    "I have experienced positive changes due to zero carbon solutions, for example solar energy, district heat, and wind" = "benefits_2",
+    "I believe that district heat networks could contribute to cost savings for residents" = "benefits_3" ,
+    "District heat networks positively impact the environment" = "benefits_4"
+)
+
+benefits_plot <- ggplot(data_benefits_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+benefits_plot
+
+```
+
+Concerns and barriers
+
+```{r}
+data_barriers <- data |> select(id, barriers_1, barriers_2) |>
+
+  mutate(
+    barriers_1 = case_when(
+      barriers_1 == 1 ~ "Strongly Disagree",
+      barriers_1 == 2 ~ "Disagree",
+      barriers_1 == 3 ~ "Slightly Disagree",
+      barriers_1 == 4 ~ "Undecided",
+      barriers_1 == 5 ~ "Slightly Agree",
+      barriers_1 == 6 ~ "Agree",
+      barriers_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  barriers_2 = case_when(
+      barriers_2 == 1 ~ "Strongly Disagree",
+      barriers_2 == 2 ~ "Disagree",
+      barriers_2 == 3 ~ "Slightly Disagree",
+      barriers_2 == 4 ~ "Undecided",
+      barriers_2 == 5 ~ "Slightly Agree",
+      barriers_2 == 6 ~ "Agree",
+      barriers_2 == 7 ~ "Strongly Agree")) 
+
+data_barriers_long <- data_barriers |> 
+  pivot_longer(
+    cols = c(barriers_1, barriers_2),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_barriers_long_complete <- data_barriers_long %>% drop_na()
+
+data_barriers_long_complete$response <- factor(data_barriers_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_barriers_long_complete$question <- factor(data_barriers_long_complete$question, levels=c("barriers_2", "barriers_1"))
+
+barriers_labels <- c(barriers_1 = "I have concerns about district heat networks", barriers_2 = "I worry about disruptions in service due to maintenance")
+
+data_barriers_long_complete$question <- fct_recode(
+    data_barriers_long_complete$question, 
+    "I have concerns about district heat networks" = "barriers_1",
+    "I worry about disruptions in service due to maintenance" = "barriers_2"
+)
+
+barriers_plot <- ggplot(data_barriers_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+barriers_plot
+
+```
+
+Community Influence and Impact
+
+```{r}
+data_community <- data |> select(id, community_1:community_11) |>
+
+  mutate(
+    community_1 = case_when(
+      community_1 == 1 ~ "Strongly Disagree",
+      community_1 == 2 ~ "Disagree",
+      community_1 == 3 ~ "Slightly Disagree",
+      community_1 == 4 ~ "Undecided",
+      community_1 == 5 ~ "Slightly Agree",
+      community_1 == 6 ~ "Agree",
+      community_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  community_2 = case_when(
+      community_2 == 1 ~ "Strongly Disagree",
+      community_2 == 2 ~ "Disagree",
+      community_2 == 3 ~ "Slightly Disagree",
+      community_2 == 4 ~ "Undecided",
+      community_2 == 5 ~ "Slightly Agree",
+      community_2 == 6 ~ "Agree",
+      community_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    community_3 = case_when(
+      community_3 == 1 ~ "Strongly Disagree",
+      community_3 == 2 ~ "Disagree",
+      community_3 == 3 ~ "Slightly Disagree",
+      community_3 == 4 ~ "Undecided",
+      community_3 == 5 ~ "Slightly Agree",
+      community_3 == 6 ~ "Agree",
+      community_3 == 7 ~ "Strongly Agree")) |>
+
+  mutate(
+    community_4 = case_when(
+      community_4 == 1 ~ "Strongly Disagree",
+      community_4 == 2 ~ "Disagree",
+      community_4 == 3 ~ "Slightly Disagree",
+      community_4 == 4 ~ "Undecided",
+      community_4 == 5 ~ "Slightly Agree",
+      community_4 == 6 ~ "Agree",
+      community_4 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    community_5 = case_when(
+      community_5 == 1 ~ "Strongly Disagree",
+      community_5 == 2 ~ "Disagree",
+      community_5 == 3 ~ "Slightly Disagree",
+      community_5 == 4 ~ "Undecided",
+      community_5 == 5 ~ "Slightly Agree",
+      community_5 == 6 ~ "Agree",
+      community_5 == 7 ~ "Strongly Agree")) |>
+
+ mutate(
+    community_6 = case_when(
+      community_6 == 1 ~ "Strongly Disagree",
+      community_6 == 2 ~ "Disagree",
+      community_6 == 3 ~ "Slightly Disagree",
+      community_6 == 4 ~ "Undecided",
+      community_6 == 5 ~ "Slightly Agree",
+      community_6 == 6 ~ "Agree",
+      community_6 == 7 ~ "Strongly Agree")) |>
+  
+   mutate(
+    community_7 = case_when(
+      community_7 == 1 ~ "Strongly Disagree",
+      community_7 == 2 ~ "Disagree",
+      community_7 == 3 ~ "Slightly Disagree",
+      community_7 == 4 ~ "Undecided",
+      community_7 == 5 ~ "Slightly Agree",
+      community_7 == 6 ~ "Agree",
+      community_7 == 7 ~ "Strongly Agree")) |>
+  
+   mutate(
+    community_8 = case_when(
+      community_8 == 1 ~ "Strongly Disagree",
+      community_8 == 2 ~ "Disagree",
+      community_8 == 3 ~ "Slightly Disagree",
+      community_8 == 4 ~ "Undecided",
+      community_8 == 5 ~ "Slightly Agree",
+      community_8 == 6 ~ "Agree",
+      community_8 == 7 ~ "Strongly Agree")) |>
+  
+   mutate(
+    community_9 = case_when(
+      community_9 == 1 ~ "Strongly Disagree",
+      community_9 == 2 ~ "Disagree",
+      community_9 == 3 ~ "Slightly Disagree",
+      community_9 == 4 ~ "Undecided",
+      community_9 == 5 ~ "Slightly Agree",
+      community_9 == 6 ~ "Agree",
+      community_9 == 7 ~ "Strongly Agree")) |>
+  
+   mutate(
+    community_10 = case_when(
+      community_10 == 1 ~ "Strongly Disagree",
+      community_10 == 2 ~ "Disagree",
+      community_10 == 3 ~ "Slightly Disagree",
+      community_10 == 4 ~ "Undecided",
+      community_10 == 5 ~ "Slightly Agree",
+      community_10 == 6 ~ "Agree",
+      community_10 == 7 ~ "Strongly Agree")) |>
+  
+   mutate(
+    community_11 = case_when(
+      community_11 == 1 ~ "Strongly Disagree",
+      community_11 == 2 ~ "Disagree",
+      community_11 == 3 ~ "Slightly Disagree",
+      community_11 == 4 ~ "Undecided",
+      community_11 == 5 ~ "Slightly Agree",
+      community_11 == 6 ~ "Agree",
+      community_11 == 7 ~ "Strongly Agree"))
+
+data_community_long <- data_community |> 
+  pivot_longer(
+    cols = c(community_1, community_2, community_3, community_4, community_5, community_6, community_7, community_8, community_9, community_10, community_11),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_community_long_complete <- data_community_long %>% drop_na()
+
+data_community_long_complete$response <- factor(data_community_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_community_long_complete$question <- factor(data_community_long_complete$question, levels=c("community_11","community_10","community_9","community_8","community_7","community_6","community_5", "community_4", "community_3", "community_2", "community_1"))
+
+data_community_long_complete$question <- fct_recode(
+    data_community_long_complete$question, 
+    "I would be interested in participating in workshops or events related to district heat networks" = "community_1",
+    "I think residents should have a say in the decision-making process for district heat network expansion" = "community_2",
+    "I think local businesses and community organisations should be involved in district heat network initiatives" = "community_3",
+    "District heat network projects should consider the input of environmental experts and advocates" = "community_4",
+    "I am aware of educational programs and/or resources related to district heat networks in my local community" = "community_5",
+    "I would attend an educational event or workshop about district heat networks" = "community_6",
+    "I am satisfied with the educational resources available for district heat networks" = "community_7",
+    "I would be interested in joining a community advisory board for district heat networks" = "community_8",
+    "I believe district heat networks can support future community growth and development" = "community_9",
+    "District heat networks should be a key consideration in urban planning and development projects" = "community_10",
+    "I believe that district heat networks can help attract new residents and businesses to the local community" = "community_11"
+)
+
+community_plot <- ggplot(data_community_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+community_plot
+
+```
+
+Environmental Impact and Sustainability
+
+```{r}
+data_sustainability <- data |> select(id, sustainability_1:sustainability_6) |>
+
+  mutate(
+    sustainability_1 = case_when(
+      sustainability_1 == 1 ~ "Strongly Disagree",
+      sustainability_1 == 2 ~ "Disagree",
+      sustainability_1 == 3 ~ "Slightly Disagree",
+      sustainability_1 == 4 ~ "Undecided",
+      sustainability_1 == 5 ~ "Slightly Agree",
+      sustainability_1 == 6 ~ "Agree",
+      sustainability_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  sustainability_2 = case_when(
+      sustainability_2 == 1 ~ "Strongly Disagree",
+      sustainability_2 == 2 ~ "Disagree",
+      sustainability_2 == 3 ~ "Slightly Disagree",
+      sustainability_2 == 4 ~ "Undecided",
+      sustainability_2 == 5 ~ "Slightly Agree",
+      sustainability_2 == 6 ~ "Agree",
+      sustainability_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    sustainability_3 = case_when(
+      sustainability_3 == 1 ~ "Strongly Disagree",
+      sustainability_3 == 2 ~ "Disagree",
+      sustainability_3 == 3 ~ "Slightly Disagree",
+      sustainability_3 == 4 ~ "Undecided",
+      sustainability_3 == 5 ~ "Slightly Agree",
+      sustainability_3 == 6 ~ "Agree",
+      sustainability_3 == 7 ~ "Strongly Agree")) |>
+
+  mutate(
+    sustainability_4 = case_when(
+      sustainability_4 == 1 ~ "Strongly Disagree",
+      sustainability_4 == 2 ~ "Disagree",
+      sustainability_4 == 3 ~ "Slightly Disagree",
+      sustainability_4 == 4 ~ "Undecided",
+      sustainability_4 == 5 ~ "Slightly Agree",
+      sustainability_4 == 6 ~ "Agree",
+      sustainability_4 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    sustainability_5 = case_when(
+      sustainability_5 == 1 ~ "Strongly Disagree",
+      sustainability_5 == 2 ~ "Disagree",
+      sustainability_5 == 3 ~ "Slightly Disagree",
+      sustainability_5 == 4 ~ "Undecided",
+      sustainability_5 == 5 ~ "Slightly Agree",
+      sustainability_5 == 6 ~ "Agree",
+      sustainability_5 == 7 ~ "Strongly Agree")) |>
+
+ mutate(
+    sustainability_6 = case_when(
+      sustainability_6 == 1 ~ "Strongly Disagree",
+      sustainability_6 == 2 ~ "Disagree",
+      sustainability_6 == 3 ~ "Slightly Disagree",
+      sustainability_6 == 4 ~ "Undecided",
+      sustainability_6 == 5 ~ "Slightly Agree",
+      sustainability_6 == 6 ~ "Agree",
+      sustainability_6 == 7 ~ "Strongly Agree"))
+  
+
+data_sustainability_long <- data_sustainability |> 
+  pivot_longer(
+    cols = c(sustainability_1, sustainability_2, sustainability_3, sustainability_4, sustainability_5, sustainability_6),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_sustainability_long_complete <- data_sustainability_long %>% drop_na()
+
+data_sustainability_long_complete$response <- factor(data_sustainability_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_sustainability_long_complete$question <- factor(data_sustainability_long_complete$question, levels=c("sustainability_6","sustainability_5", "sustainability_4", "sustainability_3", "sustainability_2", "sustainability_1"))
+
+data_sustainability_long_complete$question <- fct_recode(
+    data_sustainability_long_complete$question, 
+    "I am concerned about environmental issues, such as reducing my carbon footprint" = "sustainability_1",
+    "I think that district heat networks align with the long-term sustainability goals of my local community" = "sustainability_2",
+    "I believe that district heat networks contribute to a more sustainable and greener community" = "sustainability_3",
+   "I believe that there are many environmental benefits associated with district heat networks" = "sustainability_4",
+    "For me, sustainability is important in my long-term planning for my home’s energy needs" = "sustainability_5",
+    "I am interested in learning more about sustainability measures that can be integrated with district heat networks" = "sustainability_6"
+)
+
+sustainability_plot <- ggplot(data_sustainability_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+sustainability_plot
+
+```
+
+Future Expansion
+
+```{r}
+data_expansion <- data |> select(id, expansion_1) |>
+
+  mutate(
+    expansion_1 = case_when(
+      expansion_1 == 1 ~ "Strongly Disagree",
+      expansion_1 == 2 ~ "Disagree",
+      expansion_1 == 3 ~ "Slightly Disagree",
+      expansion_1 == 4 ~ "Undecided",
+      expansion_1 == 5 ~ "Slightly Agree",
+      expansion_1 == 6 ~ "Agree",
+      expansion_1 == 7 ~ "Strongly Agree"
+      )) 
+
+data_expansion_long <- data_expansion |> 
+  pivot_longer(
+    cols = c(expansion_1),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_expansion_long_complete <- data_expansion_long %>% drop_na()
+
+data_expansion_long_complete$response <- factor(data_expansion_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_expansion_long_complete$question <- factor(data_expansion_long_complete$question, levels=c("expansion_1"))
+
+data_expansion_long_complete$question <- fct_recode(
+    data_expansion_long_complete$question, 
+    "I think the district heat network should be expanded to cover more areas in the community" = "expansion_1"
+)
+
+expansion_plot <- ggplot(data_expansion_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+expansion_plot
+
+```
+
+Alternative Energy Sources
+
+```{r}
+data_alternative_energy <- data |> select(id, alternative_energy_1, alternative_energy_2, alternative_energy_3) |>
+
+  mutate(
+    alternative_energy_1 = case_when(
+      alternative_energy_1 == 1 ~ "Strongly Disagree",
+      alternative_energy_1 == 2 ~ "Disagree",
+      alternative_energy_1 == 3 ~ "Slightly Disagree",
+      alternative_energy_1 == 4 ~ "Undecided",
+      alternative_energy_1 == 5 ~ "Slightly Agree",
+      alternative_energy_1 == 6 ~ "Agree",
+      alternative_energy_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  alternative_energy_2 = case_when(
+      alternative_energy_2 == 1 ~ "Strongly Disagree",
+      alternative_energy_2 == 2 ~ "Disagree",
+      alternative_energy_2 == 3 ~ "Slightly Disagree",
+      alternative_energy_2 == 4 ~ "Undecided",
+      alternative_energy_2 == 5 ~ "Slightly Agree",
+      alternative_energy_2 == 6 ~ "Agree",
+      alternative_energy_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    alternative_energy_3 = case_when(
+      alternative_energy_3 == 1 ~ "Strongly Disagree",
+      alternative_energy_3 == 2 ~ "Disagree",
+      alternative_energy_3 == 3 ~ "Slightly Disagree",
+      alternative_energy_3 == 4 ~ "Undecided",
+      alternative_energy_3 == 5 ~ "Slightly Agree",
+      alternative_energy_3 == 6 ~ "Agree",
+      alternative_energy_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_alternative_energy_long <- data_alternative_energy |> 
+  pivot_longer(
+    cols = c(alternative_energy_1, alternative_energy_2, alternative_energy_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_alternative_energy_long_complete <- data_alternative_energy_long %>% drop_na()
+
+data_alternative_energy_long_complete$response <- factor(data_alternative_energy_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_alternative_energy_long_complete$question <- factor(data_alternative_energy_long_complete$question, levels=c("alternative_energy_3", "alternative_energy_2", "alternative_energy_1"))
+
+data_alternative_energy_long_complete$question <- fct_recode(
+    data_alternative_energy_long_complete$question, 
+    "I am aware of the alternative energy sources used in district heat networks, such as geothermal and solar" = "alternative_energy_1",
+    "It is important for me that district heat networks use renewable energy sources" = "alternative_energy_2",
+    "I would be willing to pay premium tariffs for services sourced from renewable energy sources" = "alternative_energy_3"
+)
+
+alternative_energy_plot <- ggplot(data_alternative_energy_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+alternative_energy_plot
+
+```
+
+Government Support and Investment
+
+```{r}
+data_government <- data |> select(id, government_1, government_2, government_3, government_4, government_5) |>
+
+  mutate(
+    government_1 = case_when(
+      government_1 == 1 ~ "Strongly Disagree",
+      government_1 == 2 ~ "Disagree",
+      government_1 == 3 ~ "Slightly Disagree",
+      government_1 == 4 ~ "Undecided",
+      government_1 == 5 ~ "Slightly Agree",
+      government_1 == 6 ~ "Agree",
+      government_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  government_2 = case_when(
+      government_2 == 1 ~ "Strongly Disagree",
+      government_2 == 2 ~ "Disagree",
+      government_2 == 3 ~ "Slightly Disagree",
+      government_2 == 4 ~ "Undecided",
+      government_2 == 5 ~ "Slightly Agree",
+      government_2 == 6 ~ "Agree",
+      government_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    government_3 = case_when(
+      government_3 == 1 ~ "Strongly Disagree",
+      government_3 == 2 ~ "Disagree",
+      government_3 == 3 ~ "Slightly Disagree",
+      government_3 == 4 ~ "Undecided",
+      government_3 == 5 ~ "Slightly Agree",
+      government_3 == 6 ~ "Agree",
+      government_3 == 7 ~ "Strongly Agree")) |>
+
+  mutate(
+    government_4 = case_when(
+      government_4 == 1 ~ "Strongly Disagree",
+      government_4 == 2 ~ "Disagree",
+      government_4 == 3 ~ "Slightly Disagree",
+      government_4 == 4 ~ "Undecided",
+      government_4 == 5 ~ "Slightly Agree",
+      government_4 == 6 ~ "Agree",
+      government_4 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    government_5 = case_when(
+      government_5 == 1 ~ "Strongly Disagree",
+      government_5 == 2 ~ "Disagree",
+      government_5 == 3 ~ "Slightly Disagree",
+      government_5 == 4 ~ "Undecided",
+      government_5 == 5 ~ "Slightly Agree",
+      government_5 == 6 ~ "Agree",
+      government_5 == 7 ~ "Strongly Agree"))
+  
+
+data_government_long <- data_government |> 
+  pivot_longer(
+    cols = c(government_1, government_2, government_3, government_4, government_5),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_government_long_complete <- data_government_long %>% drop_na()
+
+data_government_long_complete$response <- factor(data_government_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_government_long_complete$question <- factor(data_government_long_complete$question, levels=c("government_5", "government_4", "government_3", "government_2", "government_1"))
+
+data_government_long_complete$question <- fct_recode(
+    data_government_long_complete$question, 
+    "Local government support would make me more likely to connect my home to a district heat network" = "government_1",
+    "The government should regulate district heat network providers to ensure fair pricing and service quality" = "government_2",
+    "I am satisfied with the level of support provided by the government for district heat networks in my community" = "government_3",
+   "I would support community investments (i.e. pooling community funds) for district heat network infrastructure improvements" = "government_4",
+    "I would pay slightly higher taxes or fees to support district heat network improvements" = "government_5"
+)
+
+government_plot <- ggplot(data_government_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+government_plot
+
+```
+
+Technological advancements
+
+```{r}
+data_technology <- data |> select(id, technology_1, technology_2) |>
+
+  mutate(
+    technology_1 = case_when(
+      technology_1 == 1 ~ "Strongly Disagree",
+      technology_1 == 2 ~ "Disagree",
+      technology_1 == 3 ~ "Slightly Disagree",
+      technology_1 == 4 ~ "Undecided",
+      technology_1 == 5 ~ "Slightly Agree",
+      technology_1 == 6 ~ "Agree",
+      technology_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  technology_2 = case_when(
+      technology_2 == 1 ~ "Strongly Disagree",
+      technology_2 == 2 ~ "Disagree",
+      technology_2 == 3 ~ "Slightly Disagree",
+      technology_2 == 4 ~ "Undecided",
+      technology_2 == 5 ~ "Slightly Agree",
+      technology_2 == 6 ~ "Agree",
+      technology_2 == 7 ~ "Strongly Agree")) 
+
+data_technology_long <- data_technology |> 
+  pivot_longer(
+    cols = c(technology_1, technology_2),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_technology_long_complete <- data_technology_long %>% drop_na()
+
+data_technology_long_complete$response <- factor(data_technology_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_technology_long_complete$question <- factor(data_technology_long_complete$question, levels=c("technology_2", "technology_1"))
+
+data_technology_long_complete$question <- fct_recode(
+    data_technology_long_complete$question, 
+    "I think that incorporating smart technology (e.g., thermostats, energy monitoring, smart meters) would be beneficial for district heat network services" = "technology_1",
+    "I would be interested in attending demonstrations of new district heat network technologies" = "technology_2"
+)
+
+technology_plot <- ggplot(data_technology_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+technology_plot
+
+```
+
+Energy Security
+
+```{r}
+data_security <- data |> select(id, security_1) |>
+
+  mutate(
+    security_1 = case_when(
+      security_1 == 1 ~ "Strongly Disagree",
+      security_1 == 2 ~ "Disagree",
+      security_1 == 3 ~ "Slightly Disagree",
+      security_1 == 4 ~ "Undecided",
+      security_1 == 5 ~ "Slightly Agree",
+      security_1 == 6 ~ "Agree",
+      security_1 == 7 ~ "Strongly Agree"
+      )) 
+
+data_security_long <- data_security |> 
+  pivot_longer(
+    cols = c(security_1),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_security_long_complete <- data_security_long %>% drop_na()
+
+data_security_long_complete$response <- factor(data_security_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_security_long_complete$question <- factor(data_security_long_complete$question, levels=c("security_1"))
+
+data_security_long_complete$question <- fct_recode(
+    data_security_long_complete$question, 
+    "I think that district heat networks enhance and/or support energy security" = "security_1"
+)
+
+security_plot <- ggplot(data_security_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+security_plot
+
+```
+
+Resident preferences
+
+```{r}
+data_preferences <- data |> select(id, preferences_1, preferences_2) |>
+
+  mutate(
+    preferences_1 = case_when(
+      preferences_1 == 1 ~ "Strongly Disagree",
+      preferences_1 == 2 ~ "Disagree",
+      preferences_1 == 3 ~ "Slightly Disagree",
+      preferences_1 == 4 ~ "Undecided",
+      preferences_1 == 5 ~ "Slightly Agree",
+      preferences_1 == 6 ~ "Agree",
+      preferences_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  preferences_2 = case_when(
+      preferences_2 == 1 ~ "Strongly Disagree",
+      preferences_2 == 2 ~ "Disagree",
+      preferences_2 == 3 ~ "Slightly Disagree",
+      preferences_2 == 4 ~ "Undecided",
+      preferences_2 == 5 ~ "Slightly Agree",
+      preferences_2 == 6 ~ "Agree",
+      preferences_2 == 7 ~ "Strongly Agree")) 
+
+data_preferences_long <- data_preferences |> 
+  pivot_longer(
+    cols = c(preferences_1, preferences_2),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_preferences_long_complete <- data_preferences_long %>% drop_na()
+
+data_preferences_long_complete$response <- factor(data_preferences_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_preferences_long_complete$question <- factor(data_preferences_long_complete$question, levels=c("preferences_2", "preferences_1"))
+
+data_preferences_long_complete$question <- fct_recode(
+    data_preferences_long_complete$question, 
+    "I value district heat networks over traditional heating methods, e.g., individual boilers" = "preferences_1",
+    "Reliability is important for my choice of heating and hot water services" = "preferences_2"
+)
+
+preferences_plot <- ggplot(data_preferences_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+preferences_plot
+
+```
+
+Energy conservation
+
+```{r}
+data_conservation <- data |> select(id, conservation_1, conservation_2, conservation_3) |>
+
+  mutate(
+    conservation_1 = case_when(
+      conservation_1 == 1 ~ "Strongly Disagree",
+      conservation_1 == 2 ~ "Disagree",
+      conservation_1 == 3 ~ "Slightly Disagree",
+      conservation_1 == 4 ~ "Undecided",
+      conservation_1 == 5 ~ "Slightly Agree",
+      conservation_1 == 6 ~ "Agree",
+      conservation_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  conservation_2 = case_when(
+      conservation_2 == 1 ~ "Strongly Disagree",
+      conservation_2 == 2 ~ "Disagree",
+      conservation_2 == 3 ~ "Slightly Disagree",
+      conservation_2 == 4 ~ "Undecided",
+      conservation_2 == 5 ~ "Slightly Agree",
+      conservation_2 == 6 ~ "Agree",
+      conservation_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    conservation_3 = case_when(
+      conservation_3 == 1 ~ "Strongly Disagree",
+      conservation_3 == 2 ~ "Disagree",
+      conservation_3 == 3 ~ "Slightly Disagree",
+      conservation_3 == 4 ~ "Undecided",
+      conservation_3 == 5 ~ "Slightly Agree",
+      conservation_3 == 6 ~ "Agree",
+      conservation_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_conservation_long <- data_conservation |> 
+  pivot_longer(
+    cols = c(conservation_1, conservation_2, conservation_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_conservation_long_complete <- data_conservation_long %>% drop_na()
+
+data_conservation_long_complete$response <- factor(data_conservation_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_conservation_long_complete$question <- factor(data_conservation_long_complete$question, levels=c("conservation_3", "conservation_2", "conservation_1"))
+
+data_conservation_long_complete$question <- fct_recode(
+    data_conservation_long_complete$question, 
+    "I am interested in energy conservation programs and/or incentives related to district heat networks" = "conservation_1",
+    "I would consider implementing energy-saving measures in my home to complement district heat network use" = "conservation_2",
+    "I think the local community should have energy conservation goals related to district heat networks" = "conservation_3"
+)
+
+conservation_plot <- ggplot(data_conservation_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+conservation_plot
+
+```
+
+Economic impact
+
+```{r}
+data_economy <- data |> select(id, economy_1, economy_2, economy_3) |>
+
+  mutate(
+    economy_1 = case_when(
+      economy_1 == 1 ~ "Strongly Disagree",
+      economy_1 == 2 ~ "Disagree",
+      economy_1 == 3 ~ "Slightly Disagree",
+      economy_1 == 4 ~ "Undecided",
+      economy_1 == 5 ~ "Slightly Agree",
+      economy_1 == 6 ~ "Agree",
+      economy_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  economy_2 = case_when(
+      economy_2 == 1 ~ "Strongly Disagree",
+      economy_2 == 2 ~ "Disagree",
+      economy_2 == 3 ~ "Slightly Disagree",
+      economy_2 == 4 ~ "Undecided",
+      economy_2 == 5 ~ "Slightly Agree",
+      economy_2 == 6 ~ "Agree",
+      economy_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    economy_3 = case_when(
+      economy_3 == 1 ~ "Strongly Disagree",
+      economy_3 == 2 ~ "Disagree",
+      economy_3 == 3 ~ "Slightly Disagree",
+      economy_3 == 4 ~ "Undecided",
+      economy_3 == 5 ~ "Slightly Agree",
+      economy_3 == 6 ~ "Agree",
+      economy_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_economy_long <- data_economy |> 
+  pivot_longer(
+    cols = c(economy_1, economy_2, economy_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_economy_long_complete <- data_economy_long %>% drop_na()
+
+data_economy_long_complete$response <- factor(data_economy_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_economy_long_complete$question <- factor(data_economy_long_complete$question, levels=c("economy_3", "economy_2", "economy_1"))
+
+data_economy_long_complete$question <- fct_recode(
+    data_economy_long_complete$question, 
+    "I believe that district heat networks positively impact the local economy, e.g., job creation and reduced energy costs" = "economy_1",
+    "I believe that there have been economic benefits resulting from district heat network projects in my local area" = "economy_2",
+    "I believe the economic impact of district heat should be a priority for the local community" = "economy_3"
+)
+
+economy_plot <- ggplot(data_economy_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+economy_plot
+
+```
+
+Electrification
+
+```{r}
+data_electrification <- data |> select(id, electrification_1, electrification_2, electrification_3) |>
+
+  mutate(
+    electrification_1 = case_when(
+      electrification_1 == 1 ~ "Strongly Disagree",
+      electrification_1 == 2 ~ "Disagree",
+      electrification_1 == 3 ~ "Slightly Disagree",
+      electrification_1 == 4 ~ "Undecided",
+      electrification_1 == 5 ~ "Slightly Agree",
+      electrification_1 == 6 ~ "Agree",
+      electrification_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  electrification_2 = case_when(
+      electrification_2 == 1 ~ "Strongly Disagree",
+      electrification_2 == 2 ~ "Disagree",
+      electrification_2 == 3 ~ "Slightly Disagree",
+      electrification_2 == 4 ~ "Undecided",
+      electrification_2 == 5 ~ "Slightly Agree",
+      electrification_2 == 6 ~ "Agree",
+      electrification_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    electrification_3 = case_when(
+      electrification_3 == 1 ~ "Strongly Disagree",
+      electrification_3 == 2 ~ "Disagree",
+      electrification_3 == 3 ~ "Slightly Disagree",
+      electrification_3 == 4 ~ "Undecided",
+      electrification_3 == 5 ~ "Slightly Agree",
+      electrification_3 == 6 ~ "Agree",
+      electrification_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_electrification_long <- data_electrification |> 
+  pivot_longer(
+    cols = c(electrification_1, electrification_2, electrification_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_electrification_long_complete <- data_electrification_long %>% drop_na()
+
+data_electrification_long_complete$response <- factor(data_electrification_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_electrification_long_complete$question <- factor(data_electrification_long_complete$question, levels=c("electrification_3", "electrification_2", "electrification_1"))
+
+data_electrification_long_complete$question <- fct_recode(
+    data_electrification_long_complete$question, 
+    "I am interested in switching to energy sources that use no gas, such as electricity" = "electrification_1",
+    "Switching to all electric appliances would be beneficial for me" = "electrification_2",
+    "I believe appliances (e.g. cookers) and heating sources that use no gas are safer for me and my family" = "electrification_3"
+)
+
+electrification_plot <- ggplot(data_electrification_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+electrification_plot
+
+```
+
+Choice of Energy Supplier
+
+```{r}
+data_supplier <- data |> select(id, supplier_1, supplier_2, supplier_3) |>
+
+  mutate(
+    supplier_1 = case_when(
+      supplier_1 == 1 ~ "Strongly Disagree",
+      supplier_1 == 2 ~ "Disagree",
+      supplier_1 == 3 ~ "Slightly Disagree",
+      supplier_1 == 4 ~ "Undecided",
+      supplier_1 == 5 ~ "Slightly Agree",
+      supplier_1 == 6 ~ "Agree",
+      supplier_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  supplier_2 = case_when(
+      supplier_2 == 1 ~ "Strongly Disagree",
+      supplier_2 == 2 ~ "Disagree",
+      supplier_2 == 3 ~ "Slightly Disagree",
+      supplier_2 == 4 ~ "Undecided",
+      supplier_2 == 5 ~ "Slightly Agree",
+      supplier_2 == 6 ~ "Agree",
+      supplier_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    supplier_3 = case_when(
+      supplier_3 == 1 ~ "Strongly Disagree",
+      supplier_3 == 2 ~ "Disagree",
+      supplier_3 == 3 ~ "Slightly Disagree",
+      supplier_3 == 4 ~ "Undecided",
+      supplier_3 == 5 ~ "Slightly Agree",
+      supplier_3 == 6 ~ "Agree",
+      supplier_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_supplier_long <- data_supplier |> 
+  pivot_longer(
+    cols = c(supplier_1, supplier_2, supplier_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_supplier_long_complete <- data_supplier_long %>% drop_na()
+
+data_supplier_long_complete$response <- factor(data_supplier_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_supplier_long_complete$question <- factor(data_supplier_long_complete$question, levels=c("supplier_3", "supplier_2", "supplier_1"))
+
+data_supplier_long_complete$question <- fct_recode(
+    data_supplier_long_complete$question, 
+    "I like to be able to choose my energy and/or heat supplier" = "supplier_1",
+    "My choice of energy and/or heat supplier is guided by whether they provide renewable energy" = "supplier_2",
+    "My choice of energy and/or heat supplier is guided by whether they provide cheaper energy" = "supplier_3"
+)
+
+supplier_plot <- ggplot(data_supplier_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+supplier_plot
+
+```
+
+Health consequences
+
+```{r}
+data_health <- data |> select(id, health_1, health_2, health_3) |>
+
+  mutate(
+    health_1 = case_when(
+      health_1 == 1 ~ "Strongly Disagree",
+      health_1 == 2 ~ "Disagree",
+      health_1 == 3 ~ "Slightly Disagree",
+      health_1 == 4 ~ "Undecided",
+      health_1 == 5 ~ "Slightly Agree",
+      health_1 == 6 ~ "Agree",
+      health_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  health_2 = case_when(
+      health_2 == 1 ~ "Strongly Disagree",
+      health_2 == 2 ~ "Disagree",
+      health_2 == 3 ~ "Slightly Disagree",
+      health_2 == 4 ~ "Undecided",
+      health_2 == 5 ~ "Slightly Agree",
+      health_2 == 6 ~ "Agree",
+      health_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    health_3 = case_when(
+      health_3 == 1 ~ "Strongly Disagree",
+      health_3 == 2 ~ "Disagree",
+      health_3 == 3 ~ "Slightly Disagree",
+      health_3 == 4 ~ "Undecided",
+      health_3 == 5 ~ "Slightly Agree",
+      health_3 == 6 ~ "Agree",
+      health_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_health_long <- data_health |> 
+  pivot_longer(
+    cols = c(health_1, health_2, health_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_health_long_complete <- data_health_long %>% drop_na()
+
+data_health_long_complete$response <- factor(data_health_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_health_long_complete$question <- factor(data_health_long_complete$question, levels=c("health_3", "health_2", "health_1"))
+
+data_health_long_complete$question <- fct_recode(
+    data_health_long_complete$question, 
+    "For me, it is important to use energy sources which reduce the risk of triggering allergies and respiratory health conditions" = "health_1",
+    "For me, it is important to use energy sources which reduce the amount of greenhouse gases released into the environment" = "health_2",
+    "For me, it is important that energy sources reduce the risk of damp and mold" = "health_3"
+)
+
+health_plot <- ggplot(data_health_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+health_plot
+
+```
+
+Maintenance
+
+```{r}
+data_maintenance <- data |> select(id, maintenance_1, maintenance_2, maintenance_3, maintenance_4) |>
+
+  mutate(
+    maintenance_1 = case_when(
+      maintenance_1 == 1 ~ "Strongly Disagree",
+      maintenance_1 == 2 ~ "Disagree",
+      maintenance_1 == 3 ~ "Slightly Disagree",
+      maintenance_1 == 4 ~ "Undecided",
+      maintenance_1 == 5 ~ "Slightly Agree",
+      maintenance_1 == 6 ~ "Agree",
+      maintenance_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  maintenance_2 = case_when(
+      maintenance_2 == 1 ~ "Strongly Disagree",
+      maintenance_2 == 2 ~ "Disagree",
+      maintenance_2 == 3 ~ "Slightly Disagree",
+      maintenance_2 == 4 ~ "Undecided",
+      maintenance_2 == 5 ~ "Slightly Agree",
+      maintenance_2 == 6 ~ "Agree",
+      maintenance_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    maintenance_3 = case_when(
+      maintenance_3 == 1 ~ "Strongly Disagree",
+      maintenance_3 == 2 ~ "Disagree",
+      maintenance_3 == 3 ~ "Slightly Disagree",
+      maintenance_3 == 4 ~ "Undecided",
+      maintenance_3 == 5 ~ "Slightly Agree",
+      maintenance_3 == 6 ~ "Agree",
+      maintenance_3 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    maintenance_4 = case_when(
+      maintenance_4 == 1 ~ "Strongly Disagree",
+      maintenance_4 == 2 ~ "Disagree",
+      maintenance_4 == 3 ~ "Slightly Disagree",
+      maintenance_4 == 4 ~ "Undecided",
+      maintenance_4 == 5 ~ "Slightly Agree",
+      maintenance_4 == 6 ~ "Agree",
+      maintenance_4 == 7 ~ "Strongly Agree"))
+  
+data_maintenance_long <- data_maintenance |> 
+  pivot_longer(
+    cols = c(maintenance_1, maintenance_2, maintenance_3, maintenance_4),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_maintenance_long_complete <- data_maintenance_long %>% drop_na()
+
+data_maintenance_long_complete$response <- factor(data_maintenance_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_maintenance_long_complete$question <- factor(data_maintenance_long_complete$question, levels=c("maintenance_4", "maintenance_3", "maintenance_2", "maintenance_1"))
+
+data_maintenance_long_complete$question <- fct_recode(
+    data_maintenance_long_complete$question, 
+    "I am worried about district heat network faults preventing me from heating my home" = "maintenance_1",
+    "I am worried about how the district heat network will be maintained and who will be responsible for repairs" = "maintenance_2",
+    "I am worried about district heat networks causing disruptions in and around my home" = "maintenance_3",
+   "For me, a benefit of connecting to a heat network is that I won’t have to maintain a gas boiler" = "maintenance_4"
+)
+
+maintenance_plot <- ggplot(data_maintenance_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+maintenance_plot
+
+```
+
+Local jobs and local people
+
+```{r}
+data_local <- data |> select(id, local_1, local_2, local_3) |>
+
+  mutate(
+    local_1 = case_when(
+      local_1 == 1 ~ "Strongly Disagree",
+      local_1 == 2 ~ "Disagree",
+      local_1 == 3 ~ "Slightly Disagree",
+      local_1 == 4 ~ "Undecided",
+      local_1 == 5 ~ "Slightly Agree",
+      local_1 == 6 ~ "Agree",
+      local_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  local_2 = case_when(
+      local_2 == 1 ~ "Strongly Disagree",
+      local_2 == 2 ~ "Disagree",
+      local_2 == 3 ~ "Slightly Disagree",
+      local_2 == 4 ~ "Undecided",
+      local_2 == 5 ~ "Slightly Agree",
+      local_2 == 6 ~ "Agree",
+      local_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    local_3 = case_when(
+      local_3 == 1 ~ "Strongly Disagree",
+      local_3 == 2 ~ "Disagree",
+      local_3 == 3 ~ "Slightly Disagree",
+      local_3 == 4 ~ "Undecided",
+      local_3 == 5 ~ "Slightly Agree",
+      local_3 == 6 ~ "Agree",
+      local_3 == 7 ~ "Strongly Agree",
+    )
+  )
+
+data_local_long <- data_local |> 
+  pivot_longer(
+    cols = c(local_1, local_2, local_3),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_local_long_complete <- data_local_long %>% drop_na()
+
+data_local_long_complete$response <- factor(data_local_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_local_long_complete$question <- factor(data_local_long_complete$question, levels=c("local_3", "local_2", "local_1"))
+
+data_local_long_complete$question <- fct_recode(
+    data_local_long_complete$question, 
+    "I would prefer to use a local energy supplier, then any of the big 6 energy suppliers" = "local_1",
+    "I would rather use a local energy supplier to support my local economy" = "local_2",
+    "I think public-private partnerships could benefit future district heat network projects" = "local_3"
+)
+
+local_plot <- ggplot(data_local_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+local_plot
+
+```
+
+Net zero behaviours
+
+```{r}
+data_green <- data |> select(id, green_1, green_2, green_3, green_4, green_5) |>
+
+  mutate(
+    green_1 = case_when(
+      green_1 == 1 ~ "Strongly Disagree",
+      green_1 == 2 ~ "Disagree",
+      green_1 == 3 ~ "Slightly Disagree",
+      green_1 == 4 ~ "Undecided",
+      green_1 == 5 ~ "Slightly Agree",
+      green_1 == 6 ~ "Agree",
+      green_1 == 7 ~ "Strongly Agree"
+      )) |>
+
+mutate(
+  green_2 = case_when(
+      green_2 == 1 ~ "Strongly Disagree",
+      green_2 == 2 ~ "Disagree",
+      green_2 == 3 ~ "Slightly Disagree",
+      green_2 == 4 ~ "Undecided",
+      green_2 == 5 ~ "Slightly Agree",
+      green_2 == 6 ~ "Agree",
+      green_2 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    green_3 = case_when(
+      green_3 == 1 ~ "Strongly Disagree",
+      green_3 == 2 ~ "Disagree",
+      green_3 == 3 ~ "Slightly Disagree",
+      green_3 == 4 ~ "Undecided",
+      green_3 == 5 ~ "Slightly Agree",
+      green_3 == 6 ~ "Agree",
+      green_3 == 7 ~ "Strongly Agree")) |>
+
+  mutate(
+    green_4 = case_when(
+      green_4 == 1 ~ "Strongly Disagree",
+      green_4 == 2 ~ "Disagree",
+      green_4 == 3 ~ "Slightly Disagree",
+      green_4 == 4 ~ "Undecided",
+      green_4 == 5 ~ "Slightly Agree",
+      green_4 == 6 ~ "Agree",
+      green_4 == 7 ~ "Strongly Agree")) |>
+  
+  mutate(
+    green_5 = case_when(
+      green_5 == 1 ~ "Strongly Disagree",
+      green_5 == 2 ~ "Disagree",
+      green_5 == 3 ~ "Slightly Disagree",
+      green_5 == 4 ~ "Undecided",
+      green_5 == 5 ~ "Slightly Agree",
+      green_5 == 6 ~ "Agree",
+      green_5 == 7 ~ "Strongly Agree"))
+  
+
+data_green_long <- data_green |> 
+  pivot_longer(
+    cols = c(green_1, green_2, green_3, green_4, green_5),
+    names_to = "question",
+    values_to = "response"
+  )
+
+data_green_long_complete <- data_green_long %>% drop_na()
+
+data_green_long_complete$response <- factor(data_green_long_complete$response, levels=c("Strongly Agree", "Agree", "Slightly Agree", "Undecided", "Slightly Disagree", "Disagree", "Strongly Disagree"))
+
+data_green_long_complete$question <- factor(data_green_long_complete$question, levels=c("green_5", "green_4", "green_3", "green_2", "green_1"))
+
+data_green_long_complete$question <- fct_recode(
+    data_green_long_complete$question, 
+    "I buy my produce from local producers to reduce my carbon footprint" = "green_1",
+    "When heating my home, I set the thermostat to a lower temperature to decrease my carbon usage" = "green_2",
+    "I try to reduce my plastic usage and waste" = "green_3",
+   "I am interested in implementing zero carbon energy sources" = "green_4",
+    "I am keen to implement low carbon energy solutions in my home" = "green_5"
+)
+
+green_plot <- ggplot(data_green_long_complete, aes(question, fill = response)) + 
+  geom_bar(stat="count", position="fill") +
+  theme_bw() +
+  scale_fill_brewer(direction = -1)+
+  labs(y = "Proportion of Sample", x = NULL)+
+  coord_flip()+
+  scale_x_discrete(labels = label_wrap(50)) +
+  theme(axis.text.y = element_text(size = 20)) +
+  theme(axis.text.x = element_text(size = 15)) +
+  theme(axis.title.x = element_text(size = 18)) +
+  theme(legend.text = element_text(size = 15)) +
+  theme(legend.title=element_blank())
+
+green_plot
+
+```
+
+T-tests below compare whethere there is a significant difference between the mean response for each item and the mid-point (response = 4).
+
+ANOVAs below compare whether the mean response for each item is significantly different between the three resident status groups (owner occupied, privately rented, social housing).
+
+Awareness One-Sample T-Tests
+
+```{r}
+t_awareness_1 <- t.test(data$awareness_1, mu =4)
+t_awareness_2 <- t.test(data$awareness_2, mu =4)
+t_awareness_3 <- t.test(data$awareness_3, mu =4)
+t_awareness_1
+t_awareness_2
+t_awareness_3
+```
+
+Awareness ANOVA
+
+```{r}
+anova_awareness_1 <- aov_4(
+  awareness_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, awareness_1, resident_status, id)
+)
+
+anova_awareness_1
+
+anova_awareness_2 <- aov_4(
+  awareness_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, awareness_2, resident_status, id)
+)
+
+anova_awareness_2
+
+anova_awareness_3 <- aov_4(
+  awareness_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, awareness_3, resident_status, id)
+)
+
+anova_awareness_3
+```
+
+Information One-Sample t-tests
+
+```{r}
+t_information_1 <- t.test(data$information_1, mu =4)
+t_information_2 <- t.test(data$information_2, mu =4)
+t_information_3 <- t.test(data$information_3, mu =4)
+t_information_4 <- t.test(data$information_4, mu =4)
+t_information_5 <- t.test(data$information_5, mu =4)
+
+t_information_1
+t_information_2
+t_information_3
+t_information_4
+t_information_5
+```
+
+Information ANOVA
+
+```{r}
+anova_information_1 <- aov_4(
+  information_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, information_1, resident_status, id)
+)
+
+anova_information_1
+
+anova_information_2 <- aov_4(
+  information_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, information_2, resident_status, id)
+)
+
+anova_information_2
+
+anova_information_3 <- aov_4(
+  information_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, information_3, resident_status, id)
+)
+
+anova_information_3
+
+anova_information_4 <- aov_4(
+  information_4 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, information_4, resident_status, id)
+)
+
+anova_information_4
+
+anova_information_5 <- aov_4(
+  information_5 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, information_5, resident_status, id)
+)
+
+anova_information_5
+
+emm_information_3 <- emmeans(anova_information_3, ~resident_status)
+emm_information_3
+
+pairs(emm_information_3)
+
+```
+
+Perceived benefits one-sample t-tests
+
+```{r}
+t_benefits_1 <- t.test(data$benefits_1, mu =4)
+t_benefits_2 <- t.test(data$benefits_2, mu =4)
+t_benefits_3 <- t.test(data$benefits_3, mu =4)
+t_benefits_4 <- t.test(data$benefits_4, mu =4)
+
+t_benefits_1
+t_benefits_2
+t_benefits_3
+t_benefits_4
+```
+
+Perceived benefits ANOVA
+
+```{r}
+anova_benefits_1 <- aov_4(
+  benefits_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, benefits_1, resident_status, id)
+)
+
+anova_benefits_1
+
+anova_benefits_2 <- aov_4(
+  benefits_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, benefits_2, resident_status, id)
+)
+
+anova_benefits_2
+
+anova_benefits_3 <- aov_4(
+  benefits_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, benefits_3, resident_status, id)
+)
+
+anova_benefits_3
+
+anova_benefits_4 <- aov_4(
+  benefits_4 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, benefits_4, resident_status, id)
+)
+
+anova_benefits_4
+
+```
+
+Barriers one-sample t-tests
+
+```{r}
+t_barriers_1 <- t.test(data$barriers_1, mu =4)
+t_barriers_2 <- t.test(data$barriers_2, mu =4)
+
+t_barriers_1
+t_barriers_2
+
+```
+
+Barriers ANOVA
+
+```{r}
+anova_barriers_1 <- aov_4(
+  barriers_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, barriers_1, resident_status, id)
+)
+
+anova_barriers_1
+
+anova_barriers_2 <- aov_4(
+  barriers_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, barriers_2, resident_status, id)
+)
+
+anova_barriers_2
+
+```
+
+Community one-sample t-tests
+
+```{r}
+t_community_1 <- t.test(data$community_1, mu =4)
+t_community_2 <- t.test(data$community_2, mu =4)
+t_community_3 <- t.test(data$community_3, mu =4)
+t_community_4 <- t.test(data$community_4, mu =4)
+t_community_5 <- t.test(data$community_5, mu =4)
+t_community_6 <- t.test(data$community_6, mu =4)
+t_community_7 <- t.test(data$community_7, mu =4)
+t_community_8 <- t.test(data$community_8, mu =4)
+t_community_9 <- t.test(data$community_9, mu =4)
+t_community_10 <- t.test(data$community_10, mu =4)
+t_community_11 <- t.test(data$community_11, mu =4)
+
+
+t_community_1
+t_community_2
+t_community_3
+t_community_4
+t_community_5
+t_community_6
+t_community_7
+t_community_8
+t_community_9
+t_community_10
+t_community_11
+
+```
+
+Community ANOVA
+
+```{r}
+anova_community_1 <- aov_4(
+  community_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_1, resident_status, id)
+)
+
+anova_community_1
+
+anova_community_2 <- aov_4(
+  community_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_2, resident_status, id)
+)
+
+anova_community_2
+
+anova_community_3 <- aov_4(
+  community_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_3, resident_status, id)
+)
+
+anova_community_3
+
+anova_community_4 <- aov_4(
+  community_4 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_4, resident_status, id)
+)
+
+anova_community_4
+
+anova_community_5 <- aov_4(
+  community_5 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_5, resident_status, id)
+)
+
+anova_community_5
+
+anova_community_6 <- aov_4(
+  community_6 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_6, resident_status, id)
+)
+
+anova_community_6
+
+anova_community_7 <- aov_4(
+  community_7 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_7, resident_status, id)
+)
+
+anova_community_7
+
+anova_community_8 <- aov_4(
+  community_8 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_8, resident_status, id)
+)
+
+anova_community_8
+
+anova_community_9 <- aov_4(
+  community_9 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_9, resident_status, id)
+)
+
+anova_community_9
+
+anova_community_10 <- aov_4(
+  community_10 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_10, resident_status, id)
+)
+
+anova_community_10
+
+anova_community_11 <- aov_4(
+  community_11 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, community_11, resident_status, id)
+)
+
+anova_community_11
+
+```
+
+Sustainability one-sample t-tests
+
+```{r}
+t_sustainability_1 <- t.test(data$sustainability_1, mu =4)
+t_sustainability_2 <- t.test(data$sustainability_2, mu =4)
+t_sustainability_3 <- t.test(data$sustainability_3, mu =4)
+t_sustainability_4 <- t.test(data$sustainability_4, mu =4)
+t_sustainability_5 <- t.test(data$sustainability_5, mu =4)
+t_sustainability_6 <- t.test(data$sustainability_6, mu =4)
+t_sustainability_7 <- t.test(data$sustainability_7, mu =4)
+
+t_sustainability_1
+t_sustainability_2
+t_sustainability_3
+t_sustainability_4
+t_sustainability_5
+t_sustainability_6
+t_sustainability_7
+
+```
+
+Sustainability ANOVA
+
+```{r}
+anova_sustainability_1 <- aov_4(
+  sustainability_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, sustainability_1, resident_status, id)
+)
+
+anova_sustainability_1
+
+anova_sustainability_2 <- aov_4(
+  sustainability_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, sustainability_2, resident_status, id)
+)
+
+anova_sustainability_2
+
+anova_sustainability_3 <- aov_4(
+  sustainability_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, sustainability_3, resident_status, id)
+)
+
+anova_sustainability_3
+
+anova_sustainability_4 <- aov_4(
+  sustainability_4 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, sustainability_4, resident_status, id)
+)
+
+anova_sustainability_4
+
+anova_sustainability_5 <- aov_4(
+  sustainability_5 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, sustainability_5, resident_status, id)
+)
+
+anova_sustainability_5
+
+anova_sustainability_6 <- aov_4(
+  sustainability_6 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, sustainability_6, resident_status, id)
+)
+
+anova_sustainability_6
+
+anova_sustainability_7 <- aov_4(
+  sustainability_7 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, sustainability_7, resident_status, id)
+)
+
+anova_sustainability_7
+
+```
+
+Expansion one-sample t-tests
+
+```{r}
+t_expansion_1 <- t.test(data$expansion_1, mu =4)
+t_expansion_1
+```
+
+Expansion ANOVA
+
+```{r}
+anova_expansion_1 <- aov_4(
+  expansion_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, expansion_1, resident_status, id)
+)
+
+anova_expansion_1
+
+```
+
+Alternative energy one-sample t-tests
+
+```{r}
+t_alternative_energy_1 <- t.test(data$alternative_energy_1, mu =4)
+t_alternative_energy_2 <- t.test(data$alternative_energy_2, mu =4)
+t_alternative_energy_3 <- t.test(data$alternative_energy_3, mu =4)
+t_alternative_energy_1
+t_alternative_energy_2
+t_alternative_energy_3
+
+```
+
+Alternative energy ANOVA
+
+```{r}
+anova_alternative_energy_1 <- aov_4(
+  alternative_energy_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, alternative_energy_1, resident_status, id)
+)
+
+anova_alternative_energy_1
+
+anova_alternative_energy_2 <- aov_4(
+  alternative_energy_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, alternative_energy_2, resident_status, id)
+)
+
+anova_alternative_energy_2
+
+anova_alternative_energy_3 <- aov_4(
+  alternative_energy_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, alternative_energy_3, resident_status, id)
+)
+
+anova_alternative_energy_3
+
+```
+
+Government one-sample t-tests
+
+```{r}
+t_government_1 <- t.test(data$government_1, mu =4)
+t_government_2 <- t.test(data$government_2, mu =4)
+t_government_3 <- t.test(data$government_3, mu =4)
+t_government_4 <- t.test(data$government_4, mu =4)
+t_government_5 <- t.test(data$government_5, mu =4)
+t_government_1
+t_government_2
+t_government_3
+t_government_4
+t_government_5
+
+```
+
+Government ANOVA
+
+```{r}
+anova_government_1 <- aov_4(
+  government_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, government_1, resident_status, id)
+)
+
+anova_government_1
+
+anova_government_2 <- aov_4(
+  government_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, government_2, resident_status, id)
+)
+
+anova_government_2
+
+anova_government_3 <- aov_4(
+  government_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, government_3, resident_status, id)
+)
+
+anova_government_3
+
+anova_government_4 <- aov_4(
+  government_4 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, government_4, resident_status, id)
+)
+
+anova_government_4
+
+anova_government_5 <- aov_4(
+  government_5 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, government_5, resident_status, id)
+)
+
+anova_government_5
+
+```
+
+Technology one-sample t-tests
+
+```{r}
+t_technology_1 <- t.test(data$technology_1, mu =4)
+t_technology_2 <- t.test(data$technology_2, mu =4)
+t_technology_1
+t_technology_2
+
+```
+
+Technology ANOVA
+
+```{r}
+anova_technology_1 <- aov_4(
+  technology_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, technology_1, resident_status, id)
+)
+
+anova_technology_1
+
+anova_technology_2 <- aov_4(
+  technology_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, technology_2, resident_status, id)
+)
+
+anova_technology_2
+
+```
+
+Security one-sample t-test
+
+```{r}
+t_security_1 <- t.test(data$security_1, mu =4)
+t_security_1
+```
+
+Security ANOVA
+
+```{r}
+anova_security_1 <- aov_4(
+  security_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, security_1, resident_status, id)
+)
+
+anova_security_1
+
+```
+
+Preferences one-sample t-tests
+
+```{r}
+t_preferences_1 <- t.test(data$preferences_1, mu =4)
+t_preferences_2 <- t.test(data$preferences_2, mu =4)
+t_preferences_1
+t_preferences_2
+
+```
+
+Preferences ANOVA
+
+```{r}
+anova_preferences_1 <- aov_4(
+  preferences_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, preferences_1, resident_status, id)
+)
+
+anova_preferences_1
+
+anova_preferences_2 <- aov_4(
+  preferences_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, preferences_2, resident_status, id)
+)
+
+anova_preferences_2
+
+```
+
+Conservation one-sample t-tests
+
+```{r}
+t_conservation_1 <- t.test(data$conservation_1, mu =4)
+t_conservation_2 <- t.test(data$conservation_2, mu =4)
+t_conservation_3 <- t.test(data$conservation_3, mu =4)
+t_conservation_1
+t_conservation_2
+t_conservation_3
+
+```
+
+Conservation ANOVA
+
+```{r}
+anova_conservation_1 <- aov_4(
+  conservation_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, conservation_1, resident_status, id)
+)
+
+anova_conservation_1
+
+anova_conservation_2 <- aov_4(
+  conservation_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, conservation_2, resident_status, id)
+)
+
+anova_conservation_2
+
+anova_conservation_3 <- aov_4(
+  conservation_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, conservation_3, resident_status, id)
+)
+
+anova_conservation_3
+
+```
+
+Economic impact one-sample t-tests
+
+```{r}
+t_economy_1 <- t.test(data$economy_1, mu =4)
+t_economy_2 <- t.test(data$economy_2, mu =4)
+t_economy_3 <- t.test(data$economy_3, mu =4)
+
+t_economy_1
+t_economy_2
+t_economy_3
+
+```
+
+Economic impact ANOVA
+
+```{r}
+anova_economy_1 <- aov_4(
+  economy_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, economy_1, resident_status, id)
+)
+
+anova_economy_1
+
+anova_economy_2 <- aov_4(
+  economy_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, economy_2, resident_status, id)
+)
+
+anova_economy_2
+
+anova_economy_3 <- aov_4(
+  economy_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, economy_3, resident_status, id)
+)
+
+anova_economy_3
+
+```
+
+Electrification one-sample t-tests
+
+```{r}
+t_electrification_1 <- t.test(data$electrification_1, mu =4)
+t_electrification_2 <- t.test(data$electrification_2, mu =4)
+t_electrification_3 <- t.test(data$electrification_3, mu =4)
+t_electrification_1
+t_electrification_2
+t_electrification_3
+
+```
+
+Electrification ANOVA
+
+```{r}
+anova_electrification_1 <- aov_4(
+  electrification_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, electrification_1, resident_status, id)
+)
+
+anova_electrification_1
+
+anova_electrification_2 <- aov_4(
+  electrification_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, electrification_2, resident_status, id)
+)
+
+anova_electrification_2
+
+anova_electrification_3 <- aov_4(
+  electrification_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, electrification_3, resident_status, id)
+)
+
+anova_electrification_3
+
+```
+
+Supplier one-sample t-tests
+
+```{r}
+t_supplier_1 <- t.test(data$supplier_1, mu =4)
+t_supplier_2 <- t.test(data$supplier_2, mu =4)
+t_supplier_3 <- t.test(data$supplier_3, mu =4)
+t_supplier_1
+t_supplier_2
+t_supplier_3
+
+```
+
+Supplier ANOVA
+
+```{r}
+anova_supplier_1 <- aov_4(
+  supplier_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, supplier_1, resident_status, id)
+)
+
+anova_supplier_1
+
+anova_supplier_2 <- aov_4(
+  supplier_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, supplier_2, resident_status, id)
+)
+
+anova_supplier_2
+
+anova_supplier_3 <- aov_4(
+  supplier_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, supplier_3, resident_status, id)
+)
+
+anova_supplier_3
+
+emm_supplier_2 <- emmeans(anova_supplier_2, ~resident_status)
+emm_supplier_2
+
+pairs(emm_supplier_2)
+
+```
+
+Health one-sample t-tests
+
+```{r}
+t_health_1 <- t.test(data$health_1, mu =4)
+t_health_2 <- t.test(data$health_2, mu =4)
+t_health_3 <- t.test(data$health_3, mu =4)
+t_health_1
+t_health_2
+t_health_3
+
+```
+
+Health ANOVA
+
+```{r}
+anova_health_1 <- aov_4(
+  health_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, health_1, resident_status, id)
+)
+
+anova_health_1
+
+anova_health_2 <- aov_4(
+  health_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, health_2, resident_status, id)
+)
+
+anova_health_2
+
+anova_health_3 <- aov_4(
+  health_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, health_3, resident_status, id)
+)
+
+anova_health_3
+
+```
+
+Maintenance one-sided t-tests
+
+```{r}
+t_maintenance_1 <- t.test(data$maintenance_1, mu =4)
+t_maintenance_2 <- t.test(data$maintenance_2, mu =4)
+t_maintenance_3 <- t.test(data$maintenance_3, mu =4)
+t_maintenance_4 <- t.test(data$maintenance_4, mu =4)
+t_maintenance_1
+t_maintenance_2
+t_maintenance_3
+t_maintenance_4
+
+```
+
+Maintenance ANOVA
+
+```{r}
+anova_maintenance_1 <- aov_4(
+  maintenance_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, maintenance_1, resident_status, id)
+)
+
+anova_maintenance_1
+
+anova_maintenance_2 <- aov_4(
+  maintenance_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, maintenance_2, resident_status, id)
+)
+
+anova_maintenance_2
+
+anova_maintenance_3 <- aov_4(
+  maintenance_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, maintenance_3, resident_status, id)
+)
+
+anova_maintenance_3
+
+anova_maintenance_4 <- aov_4(
+  maintenance_4 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, maintenance_4, resident_status, id)
+)
+
+anova_maintenance_4
+
+```
+
+Local jobs and people one-sample t-tests
+
+```{r}
+t_local_1 <- t.test(data$local_1, mu =4)
+t_local_2 <- t.test(data$local_2, mu =4)
+t_local_3 <- t.test(data$local_3, mu =4)
+t_local_1
+t_local_2
+t_local_3
+
+```
+
+Local jobs and people ANOVA
+
+```{r}
+anova_local_1 <- aov_4(
+  local_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, local_1, resident_status, id)
+)
+
+anova_local_1
+
+anova_local_2 <- aov_4(
+  local_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, local_2, resident_status, id)
+)
+
+anova_local_2
+
+anova_local_3 <- aov_4(
+  local_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, local_3, resident_status, id)
+)
+
+anova_local_3
+
+```
+
+Net zero one-sample t-tests
+
+```{r}
+t_green_1 <- t.test(data$green_1, mu =4)
+t_green_2 <- t.test(data$green_2, mu =4)
+t_green_3 <- t.test(data$green_3, mu =4)
+t_green_4 <- t.test(data$green_4, mu =4)
+t_green_5 <- t.test(data$green_5, mu =4)
+t_green_1
+t_green_2
+t_green_3
+t_green_4
+t_green_5
+
+```
+
+Net zero ANOVA
+
+```{r}
+anova_green_1 <- aov_4(
+  green_1 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, green_1, resident_status, id)
+)
+
+anova_green_1
+
+anova_green_2 <- aov_4(
+  green_2 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, green_2, resident_status, id)
+)
+
+anova_green_2
+
+anova_green_3 <- aov_4(
+  green_3 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, green_3, resident_status, id)
+)
+
+anova_green_3
+
+anova_green_4 <- aov_4(
+  green_4 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, green_4, resident_status, id)
+)
+
+anova_green_4
+
+anova_green_5 <- aov_4(
+  green_5 ~ resident_status + (1 | id),
+  observed = "resident_status",
+  data = drop_na(data, green_5, resident_status, id)
+)
+
+anova_green_5
+
+```
+
+COM-B Linear Models
+
+```{r}
+summary_behaviour_information <- summary(lm(
+  information_1 ~ community_6 + awareness_2 + information_4 + community_3 + barriers_1 + preferences_1, data = data
+))
+summary_behaviour_information
+
+summary_behaviour_intention <- summary(lm(
+  green_5 ~ community_6 + awareness_2 + information_4 + community_3 + barriers_1 + preferences_1, data = data
+))
+summary_behaviour_intention
+
+
+```
+
+Plot of Information-seeking behaviour against physical capability
+
+```{r}
+info_physcap_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = community_6, y = information_1),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = community_6, 
+    y = information_1
+    ))+
+  labs(
+    x = "Physical capability",
+    y = "Information-seeking behaviour"
+  )+
+  theme_classic()
+
+info_physcap_plot
+```
+
+Plot of Information-seeking behaviour against psychological capability
+
+```{r}
+info_psycap_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = awareness_2, y = information_1),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = awareness_2, 
+    y = information_1
+    ))+
+  labs(
+    x = "Psychological capability",
+    y = "Information-seeking behaviour"
+  )+
+  theme_classic()
+
+info_psycap_plot
+```
+
+Plot of Information-seeking behaviour against physical opportunity
+
+```{r}
+info_physopp_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = information_4, y = information_1),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = information_4, 
+    y = information_1
+    ))+
+  labs(
+    x = "Physical opportunity",
+    y = "Information-seeking behaviour"
+  )+
+  theme_classic()
+
+info_physopp_plot
+```
+
+Plot of Information-seeking behaviour against social opportunity
+
+```{r}
+info_socopp_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = community_3, y = information_1),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = community_3, 
+    y = information_1
+    ))+
+  labs(
+    x = "Social opportunity",
+    y = "Information-seeking behaviour"
+  )+
+  theme_classic()
+
+info_socopp_plot
+```
+
+Plot of Information-seeking behaviour against reflective motivation
+
+```{r}
+info_refmot_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = barriers_1, y = information_1),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = barriers_1, 
+    y = information_1
+    ))+
+  labs(
+    x = "Reflective motivation",
+    y = "Information-seeking behaviour"
+  )+
+  theme_classic()
+
+info_refmot_plot
+```
+
+Plot of Information-seeking behaviour against automatic motivation
+
+```{r}
+info_automot_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = preferences_1, y = information_1),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = preferences_1, 
+    y = information_1
+    ))+
+  labs(
+    x = "Automatic motivation",
+    y = "Information-seeking behaviour"
+  )+
+  theme_classic()
+
+info_automot_plot
+```
+
+Combine information-seeking behaviour plots
+
+```{r}
+combined_info_plot <-
+(info_physcap_plot+info_psycap_plot+info_physopp_plot+info_socopp_plot+info_refmot_plot+info_automot_plot)
+
+ggsave(
+  filename = "combined_info_plot.png",
+  plot = combined_info_plot, width = 15, height = 7
+)
+```
+
+Plot of low carbon behaviour intention against physical capability
+
+```{r}
+intent_physcap_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = community_6, y = green_5),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = community_6, 
+    y = green_5
+    ))+
+  labs(
+    x = "Physical capability",
+    y = "Low carbon energy intention"
+  )+
+  theme_classic()
+
+intent_physcap_plot
+```
+
+Plot of low carbon behaviour intention against psychological capability
+
+```{r}
+intent_psycap_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = awareness_2, y = green_5),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = awareness_2, 
+    y = green_5
+    ))+
+  labs(
+    x = "Psychological capability",
+    y = "Low carbon energy intention"
+  )+
+  theme_classic()
+
+intent_psycap_plot
+```
+
+Plot of low carbon behaviour intention against physical opportunity
+
+```{r}
+intent_physopp_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = information_4, y = green_5),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = information_4, 
+    y = green_5
+    ))+
+  labs(
+    x = "Physical opportunity",
+    y = "Low carbon energy intention"
+  )+
+  theme_classic()
+
+intent_physopp_plot
+```
+
+Plot of low carbon behaviour intention against social opportunity
+
+```{r}
+intent_socopp_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = community_3, y = green_5),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = community_3, 
+    y = green_5
+    ))+
+  labs(
+    x = "Social opportunity",
+    y = "Low carbon energy intention"
+  )+
+  theme_classic()
+
+intent_socopp_plot
+```
+
+Plot of low carbon behaviour intention against reflective motivation
+
+```{r}
+intent_refmot_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = barriers_1, y = green_5),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = barriers_1, 
+    y = green_5
+    ))+
+  labs(
+    x = "Reflective motivation",
+    y = "Low carbon energy intention"
+  )+
+  theme_classic()
+
+intent_refmot_plot
+```
+
+Plot of low carbon behaviour intention against automatic motivation
+
+```{r}
+intent_automot_plot <-
+ggplot(data = data) +
+  geom_smooth(
+    mapping = 
+      aes(x = preferences_1, y = green_5),
+    method = "lm"
+  )+
+  geom_point(mapping = aes(
+    x = preferences_1, 
+    y = green_5
+    ))+
+  labs(
+    x = "Automatic motivation",
+    y = "Low carbon energy intention"
+  )+
+  theme_classic()
+
+intent_automot_plot
+```
+
+Combine low-carbon intention plots
+
+```{r}
+combined_intent_plot <-
+(intent_physcap_plot+intent_psycap_plot+intent_physopp_plot+intent_socopp_plot+intent_refmot_plot+intent_automot_plot)
+
+ggsave(
+  filename = "combined_intent_plot.png",
+  plot = combined_intent_plot, width = 15, height = 7
+)
+```
+
+Plot of standardised coefficients for information seeking behaviour
+
+```{r}
+
+# Fit the linear model
+information_seeking_model <- lm(information_1 ~ community_6 + awareness_2 + information_4 +
+              community_3 + barriers_1 + preferences_1, data = data)
+
+# Normalize the predictors and response variable
+normalized_data_information_seeking <- data
+cols_to_normalize <- c("information_1", "community_6", "awareness_2", 
+                       "information_4", "community_3", "barriers_1", "preferences_1")
+normalized_data_information_seeking[cols_to_normalize] <- scale(data[cols_to_normalize])
+
+# Refit the model with normalized data
+normalized_model_information_seeking <- lm(information_1 ~ community_6 + awareness_2 + information_4 +
+                         community_3 + barriers_1 + preferences_1, data = normalized_data_information_seeking)
+
+# Extract coefficients and confidence intervals
+coefficients_information_seeking <- summary(normalized_model_information_seeking)$coefficients
+conf_intervals_information_seeking <- confint(normalized_model_information_seeking)
+
+# Prepare data for plotting
+slope_data_information_seeking <- data.frame(
+  Predictor = rownames(coefficients_information_seeking)[-1], # Exclude intercept
+  StandardizedSlope = coefficients_information_seeking[-1, "Estimate"], # Standardized coefficients
+  LowerCI = conf_intervals_information_seeking[-1, 1], # Lower bound of confidence intervals
+  UpperCI = conf_intervals_information_seeking[-1, 2], # Upper bound of confidence intervals
+  PValue = coefficients_information_seeking[-1, "Pr(>|t|)"] # P-values for significance
+)
+
+# Define custom labels and order
+custom_labels_information_seeking <- c(
+  "community_3" = "Social Opportunity",
+  "information_4" = "Physical Opportunity",
+  "barriers_1" = "Reflective Motivation",
+  "preferences_1" = "Automatic Motivation",
+  "awareness_2" = "Psychological Capability",
+  "community_6" = "Physical Capability" 
+)
+
+# Update slope_data with custom labels and order
+slope_data_information_seeking$Predictor <- factor(
+  slope_data_information_seeking$Predictor,
+  levels = names(custom_labels_information_seeking), # Use the specified order
+  labels = custom_labels_information_seeking         # Apply the custom labels
+)
+
+# Create the plot
+information_seeking_plot <- ggplot(slope_data_information_seeking, aes(x = reorder(Predictor, StandardizedSlope), y = StandardizedSlope)) +
+  geom_point(aes(color = PValue < 0.05), size = 3) + # Points colored by significance
+  geom_errorbar(aes(ymin = LowerCI, ymax = UpperCI), width = 0.2) + # Confidence intervals
+  geom_segment(aes(xend = Predictor, y = 0, yend = StandardizedSlope), linetype = "dashed") + # Connect to 0
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", linewidth = 1) + # Add dotted line at y=0
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "gray"), labels = c("Significant", "Not Significant")) +
+  labs(title = "A",
+    x = " COM-B Predictors",
+       y = "Standardised Coefficient (Beta)",
+       color = "Significance") +
+  coord_flip() +
+  theme_classic() +
+  theme(legend.position = "none")
+
+information_seeking_plot
+```
+
+Plot of standardised coefficients for sustainable energy source intention
+
+```{r}
+# Fit the linear model
+sustainable_intention_model <- lm(green_5 ~ community_6 + awareness_2 + information_4 + community_3 + barriers_1 + preferences_1, data = data)
+
+# Normalize the predictors and response variable
+normalized_data_sustainable_intention <- data
+cols_to_normalize <- c("green_5", "community_6", "awareness_2", 
+                       "information_4", "community_3", "barriers_1", "preferences_1")
+normalized_data_sustainable_intention[cols_to_normalize] <- scale(data[cols_to_normalize])
+
+# Refit the model with normalized data
+normalized_model_sustainable_intention <- lm(green_5 ~ community_6 + awareness_2 + information_4 + community_3 + barriers_1 + preferences_1, data = normalized_data_sustainable_intention)
+
+# Extract coefficients and confidence intervals
+coefficients_sustainable_intention <- summary(normalized_model_sustainable_intention)$coefficients
+conf_intervals_sustainable_intention <- confint(normalized_model_sustainable_intention)
+
+# Prepare data for plotting
+slope_data_sustainable_intention <- data.frame(
+  Predictor = rownames(coefficients_sustainable_intention)[-1], # Exclude intercept
+  StandardizedSlope = coefficients_sustainable_intention[-1, "Estimate"], # Standardized coefficients
+  LowerCI = conf_intervals_sustainable_intention[-1, 1], # Lower bound of confidence intervals
+  UpperCI = conf_intervals_sustainable_intention[-1, 2], # Upper bound of confidence intervals
+  PValue = coefficients_sustainable_intention[-1, "Pr(>|t|)"] # P-values for significance
+)
+
+# Define custom labels and order
+custom_labels_sustainable_intention <- c(
+  "community_3" = "Social Opportunity",
+  "information_4" = "Physical Opportunity",
+  "barriers_1" = "Reflective Motivation",
+  "preferences_1" = "Automatic Motivation",
+  "awareness_2" = "Psychological Capability",
+  "community_6" = "Physical Capability" 
+)
+
+# Update slope_data with custom labels and order
+slope_data_sustainable_intention$Predictor <- factor(
+  slope_data_sustainable_intention$Predictor,
+  levels = names(custom_labels_sustainable_intention), # Use the specified order
+  labels = custom_labels_sustainable_intention         # Apply the custom labels
+)
+
+# Create the plot
+sustainable_intention_plot <- ggplot(slope_data_sustainable_intention, aes(x = reorder(Predictor, StandardizedSlope), y = StandardizedSlope)) +
+  geom_point(aes(color = PValue < 0.05), size = 3) + # Points colored by significance
+  geom_errorbar(aes(ymin = LowerCI, ymax = UpperCI), width = 0.2) + # Confidence intervals
+  geom_segment(aes(xend = Predictor, y = 0, yend = StandardizedSlope), linetype = "dashed") + # Connect to 0
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", linewidth = 1) + # Add dotted line at y=0
+  scale_color_manual(values = c("TRUE" = "red", "FALSE" = "gray"), labels = c("Significant", "Not Significant")) +
+  labs(title = "B",
+    x = "COM-B Predictors",
+       y = "Standardised Coefficient (Beta)",
+       color = "Significance") +
+  coord_flip() +
+  theme_classic() +
+  theme(legend.position = "none")
+
+sustainable_intention_plot
+```
+
+Combined COM-B plots
+
+```{r}
+information_seeking_plot+sustainable_intention_plot
+```
